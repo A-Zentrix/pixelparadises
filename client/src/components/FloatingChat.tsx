@@ -16,7 +16,8 @@ export default function FloatingChat() {
   };
 
   const minimizeChat = () => {
-    setIsMinimized(true);
+    setIsOpen(false);
+    setIsMinimized(false);
   };
 
   return (

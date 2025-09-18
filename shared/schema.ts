@@ -165,6 +165,21 @@ export const insertUserRewardSchema = createInsertSchema(userRewards).omit({
   redeemedAt: true,
 });
 
+// Update schemas for proper validation
+export const updateMovieSchema = insertMovieSchema.partial().omit({
+  createdAt: true,
+});
+
+export const updateVideoSchema = insertVideoSchema.partial().omit({
+  createdAt: true,
+  userId: true,
+});
+
+export const updateSongSchema = insertSongSchema.partial().omit({
+  createdAt: true,
+  userId: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;

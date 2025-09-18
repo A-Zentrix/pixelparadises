@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/Dashboard";
 import Recreation from "@/pages/Recreation";
 import Games from "@/pages/Games";
+import MindGoals from "@/pages/MindGoals";
 import Sidebar from "@/components/Sidebar";
 import FloatingChat from "@/components/FloatingChat";
 
@@ -18,7 +19,7 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/recreation" component={Recreation} />
           <Route path="/games" component={Games} />
-          <Route path="/goals" component={() => <div className="text-white text-2xl">Mind Goals - Coming Soon</div>} />
+          <Route path="/goals" component={MindGoals} />
           <Route path="/knowledge" component={() => <div className="text-white text-2xl">Knowledge Bank - Coming Soon</div>} />
           <Route path="/discovery" component={() => <div className="text-white text-2xl">Discovery - Coming Soon</div>} />
           <Route component={() => <div className="text-white text-2xl">Page Not Found</div>} />

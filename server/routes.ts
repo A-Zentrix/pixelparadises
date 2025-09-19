@@ -1,9 +1,18 @@
 import type { Express } from "express";
+import express from "express";
+import fs from "fs";
+import path from "path";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertMoodEntrySchema, insertGameScoreSchema, insertUserProgressSchema, insertMovieSchema, insertVideoSchema, insertSongSchema, insertRewardSchema, updateMovieSchema, updateVideoSchema, updateSongSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve local videos statically
+  const videosDir = path.resolve(import.meta.dirname, "..", "videos");
+  if (fs.existsSync(videosDir)) {
+    app.use("/videos", express.static(videosDir));
+  }
+
   // Get current user (default user for demo)
   app.get("/api/user", async (req, res) => {
     try {
@@ -62,6 +71,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(moodEntry);
     } catch (error) {
       res.status(400).json({ message: "Invalid mood data" });
+    }
+  });
+
+  // List local videos from the project's /videos directory
+  app.get("/api/local-videos", async (_req, res) => {
+    try {
+      if (!fs.existsSync(videosDir)) {
+        return res.json([]);
+      }
+      const entries = await fs.promises.readdir(videosDir, { withFileTypes: true });
+      const files = entries
+        .filter((e) => e.isFile() && /\.(mp4|webm|ogg)$/i.test(e.name))
+        .map((e) => e.name);
+
+      const withMeta = await Promise.all(
+        files.map(async (fileName) => {
+          const filePath = path.join(videosDir, fileName);
+          const stat = await fs.promises.stat(filePath);
+          const title = fileName.replace(/[_-]+/g, " ").replace(/\.[^.]+$/, "");
+          return {
+            id: fileName,
+            title,
+            url: `/videos/${encodeURIComponent(fileName)}`,
+            sizeBytes: stat.size,
+          };
+        })
+      );
+
+      res.json(withMeta);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to list local videos" });
     }
   });
 

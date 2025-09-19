@@ -1,5 +1,6 @@
 import { Palette, Leaf, Wind, Sun, Music, Heart } from "lucide-react";
 import { motion } from "framer-motion";
+import BackButton from "@/components/BackButton";
 
 const activities = [
   {
@@ -62,6 +63,9 @@ const wellnessStats = [
 export default function Recreation() {
   return (
     <>
+      <div className="mb-4">
+        <BackButton />
+      </div>
       {/* Header */}
       <div className="flex justify-between items-center mb-6" data-testid="recreation-header">
         <h1 className="text-white text-3xl font-bold">Recreation Center</h1>

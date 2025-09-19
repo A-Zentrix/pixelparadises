@@ -1,5 +1,9 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import DefaultThumb from "@assets/image_1758207876569.png";
 import { motion } from "framer-motion";
+import BackButton from "@/components/BackButton";
 import { Play, Music, Coins, Trophy, Star, Clock, Eye, Headphones } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +33,13 @@ interface Song {
   createdAt?: Date;
 }
 
+interface LocalVideo {
+  id: string;
+  title: string;
+  url: string;
+  sizeBytes?: number;
+}
+
 interface User {
   id: string;
   username: string;
@@ -39,6 +50,11 @@ interface User {
 
 export default function MindGoals() {
   const { toast } = useToast();
+  const [showAllVideos, setShowAllVideos] = useState(false);
+  const [playerOpen, setPlayerOpen] = useState(false);
+  const [player, setPlayer] = useState<{ src: string; title: string } | null>(null);
+  const lastTimeRef = useRef(0);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch user data for coins display
   const { data: user } = useQuery<User>({
@@ -53,6 +69,11 @@ export default function MindGoals() {
   // Fetch songs  
   const { data: songs = [], isLoading: songsLoading } = useQuery<Song[]>({
     queryKey: ["/api/songs"],
+  });
+
+  // Fetch local uploaded videos from /videos folder
+  const { data: localVideos = [], isLoading: localVideosLoading } = useQuery<LocalVideo[]>({
+    queryKey: ["/api/local-videos"],
   });
 
   // Watch video mutation
@@ -101,7 +122,7 @@ export default function MindGoals() {
     },
   });
 
-  if (videosLoading || songsLoading) {
+  if (videosLoading || songsLoading || localVideosLoading) {
     return (
       <div className="flex items-center justify-center h-full" data-testid="loading">
         <div className="glass-card rounded-2xl p-8">
@@ -113,6 +134,7 @@ export default function MindGoals() {
 
   return (
     <div className="space-y-6" data-testid="mind-goals-page">
+      <BackButton className="mb-2" />
       {/* Header with Coins Display */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -145,14 +167,17 @@ export default function MindGoals() {
         className="glass-card rounded-2xl p-6"
         data-testid="videos-section"
       >
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-            <Play className="text-white w-5 h-5" />
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
+              <Play className="text-white w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-white text-xl font-semibold">Wellness Videos</h2>
+              <p className="text-white/70 text-sm">Watch and earn 2 coins per video</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-white text-xl font-semibold">Wellness Videos</h2>
-            <p className="text-white/70 text-sm">Watch and earn 2 coins per video</p>
-          </div>
+          {/* Horizontal scroll replaces pagination */}
         </div>
 
         {videos.length === 0 ? (
@@ -160,39 +185,112 @@ export default function MindGoals() {
             No videos available yet. Check back soon!
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-4">
-            {videos.map((video) => (
-              <motion.div
-                key={video.id}
-                whileHover={{ scale: 1.02 }}
-                className="glass-card rounded-xl p-4 cursor-pointer group"
-                onClick={() => watchVideoMutation.mutate(video.id)}
-                data-testid={`video-${video.id}`}
+          <>
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Previous"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 text-white rounded-full w-9 h-9 flex items-center justify-center"
+                onClick={() => scrollerRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
               >
-                <div className="flex space-x-4">
-                  <div className="relative w-24 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                    <Play className="text-white w-6 h-6 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-medium mb-1" data-testid={`video-title-${video.id}`}>
-                      {video.title}
-                    </h3>
-                    <p className="text-white/70 text-sm mb-2">{video.description}</p>
-                    <div className="flex items-center space-x-4 text-xs text-white/60">
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{video.duration}</span>
+                ‹
+              </button>
+              <button
+                type="button"
+                aria-label="Next"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 text-white rounded-full w-9 h-9 flex items-center justify-center"
+                onClick={() => scrollerRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+              >
+                ›
+              </button>
+              <div className="overflow-hidden px-11">
+                <div ref={scrollerRef} className="flex gap-4 pr-4 overflow-x-auto scrollbar-none">
+                  {localVideos.map((video) => (
+                    <motion.div
+                      key={video.id}
+                      whileHover={{ scale: 1.03 }}
+                      className="glass-card rounded-xl p-3 flex-shrink-0 w-48"
+                      data-testid={`local-video-${video.id}`}
+                    >
+                      <div className="relative w-48 h-40 rounded-lg overflow-hidden">
+                        <img src={DefaultThumb} alt="thumbnail" className="w-full h-full object-cover" />
+                        <button
+                          className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30"
+                          onClick={() => { setPlayer({ src: (video as any).url, title: video.title }); setPlayerOpen(true); }}
+                          aria-label={`Play ${video.title}`}
+                        >
+                          <Play className="text-white w-8 h-8" />
+                        </button>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Eye className="w-3 h-3" />
-                        <span>+2 coins</span>
-                      </div>
-                    </div>
-                  </div>
+                      <h3 className="text-white font-medium mt-2 line-clamp-2" data-testid={`local-video-title-${video.id}`}>
+                        {video.title}
+                      </h3>
+                    </motion.div>
+                  ))}
                 </div>
-              </motion.div>
-            ))}
-          </div>
+              </div>
+            </div>
+            <Dialog open={playerOpen} onOpenChange={setPlayerOpen}>
+              <DialogContent className="max-w-3xl w-[90vw] p-0 overflow-hidden">
+                <DialogHeader className="px-6 pt-6">
+                  <DialogTitle className="text-white">{player?.title}</DialogTitle>
+                </DialogHeader>
+                <div className="bg-black">
+                  {player && (
+                    <video
+                      controls
+                      autoPlay
+                      preload="metadata"
+                      className="w-full h-auto"
+                      controlsList="nodownload noplaybackrate noremoteplayback"
+                      disablePictureInPicture
+                      onLoadedMetadata={(e) => {
+                        lastTimeRef.current = e.currentTarget.currentTime || 0;
+                        // lock playback rate
+                        if (e.currentTarget.playbackRate !== 1) {
+                          e.currentTarget.playbackRate = 1;
+                        }
+                      }}
+                      onRateChange={(e) => {
+                        if (e.currentTarget.playbackRate !== 1) {
+                          e.currentTarget.playbackRate = 1;
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        const blockedKeys = [
+                          'ArrowLeft', 'ArrowRight', 'Home', 'End',
+                          'j', 'J', 'l', 'L', ',', '.'
+                        ];
+                        if (blockedKeys.includes(e.key)) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }
+                      }}
+                      onTimeUpdate={(e) => {
+                        lastTimeRef.current = e.currentTarget.currentTime;
+                      }}
+                      onSeeking={(e) => {
+                        const v = e.currentTarget;
+                        // Revert any attempt to jump away from the last known playback position
+                        if (Math.abs(v.currentTime - lastTimeRef.current) > 0.5) {
+                          v.currentTime = lastTimeRef.current;
+                        }
+                      }}
+                      onSeeked={(e) => {
+                        const v = e.currentTarget;
+                        if (Math.abs(v.currentTime - lastTimeRef.current) > 0.5) {
+                          v.currentTime = lastTimeRef.current;
+                        }
+                      }}
+                    >
+                      <source src={player.src} />
+                      Your browser does not support the video tag.
+                    </video>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </>
         )}
       </motion.div>
 

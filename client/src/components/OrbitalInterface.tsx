@@ -11,10 +11,10 @@ export default function OrbitalInterface() {
   ];
 
   return (
-    <div className="glass-card rounded-3xl h-96 relative overflow-hidden flex items-center justify-center" data-testid="orbital-interface">
+    <div className="glass-card rounded-3xl h-[28rem] md:h-[34rem] lg:h-[38rem] relative overflow-hidden flex items-center justify-center w-full" data-testid="orbital-interface">
       {/* Orbital Rings */}
       <motion.div 
-        className="orbital-ring w-80 h-80"
+        className="orbital-ring w-96 h-96 md:w-[28rem] md:h-[28rem] lg:w-[32rem] lg:h-[32rem]"
         animate={{ rotate: 360 }}
         transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
         data-testid="orbital-ring"

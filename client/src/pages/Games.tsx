@@ -1,6 +1,8 @@
-import { Brain, Puzzle, Clock, Lightbulb, Star } from "lucide-react";
+import { Brain, Puzzle, Clock, Lightbulb, Star, Gamepad2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
+import BackButton from "@/components/BackButton";
 
 const featuredGames = [
   {
@@ -83,6 +85,9 @@ export default function Games() {
 
   return (
     <>
+      <div className="mb-4">
+        <BackButton />
+      </div>
       {/* Header */}
       <div className="flex justify-between items-center mb-6" data-testid="games-header">
         <h1 className="text-white text-3xl font-bold">PlayZone</h1>
@@ -143,40 +148,53 @@ export default function Games() {
               </button>
             </motion.div>
           ))}
+          
+          {/* Snake Game Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="game-card glass-card rounded-3xl p-6"
+            data-testid="featured-game-snake"
+          >
+            <div className="relative mb-4">
+              <div className="w-full h-32 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 flex items-center justify-center">
+                <Gamepad2 className="w-12 h-12 text-white" />
+              </div>
+              <div className="absolute top-2 right-2 bg-gradient-to-r from-emerald-400 to-teal-400 text-white px-2 py-1 rounded-lg text-xs font-medium">
+                Classic
+              </div>
+            </div>
+            <h3 className="text-white font-semibold text-lg mb-2">Snake Game</h3>
+            <p className="text-white/70 text-sm mb-4">
+              Classic arcade Snake with modern controls. Eat food, avoid walls and yourself, chase high scores!
+            </p>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <div className="flex text-yellow-400">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className="w-4 h-4 fill-current"
+                    />
+                  ))}
+                </div>
+                <span className="text-white/60 text-sm">5.0</span>
+              </div>
+              <span className="text-accent text-sm font-medium">+10 XP</span>
+            </div>
+            <Link href="/games/snake">
+              <button 
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+                data-testid="play-snake"
+              >
+                Play Snake
+              </button>
+            </Link>
+          </motion.div>
         </div>
       </div>
 
-      {/* Daily Challenges */}
-      <div className="mb-8">
-        <h2 className="text-white text-xl font-semibold mb-4">Daily Challenges</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {dailyChallenges.map((challenge, index) => {
-            const Icon = challenge.icon;
-            return (
-              <motion.div
-                key={challenge.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                className="glass-card rounded-2xl p-4 text-center"
-                data-testid={`challenge-${index}`}
-              >
-                <div className={`w-12 h-12 bg-gradient-to-r ${challenge.gradient} rounded-full flex items-center justify-center mx-auto mb-3`}>
-                  <Icon className="text-white text-lg" />
-                </div>
-                <h4 className="text-white font-medium mb-2">{challenge.title}</h4>
-                <p className="text-white/60 text-xs mb-3">{challenge.description}</p>
-                <button 
-                  className={`bg-gradient-to-r ${challenge.gradient} text-white px-4 py-2 rounded-lg text-sm w-full`}
-                  data-testid={`challenge-${challenge.action.toLowerCase()}`}
-                >
-                  {challenge.action}
-                </button>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Learning Progress */}
       <motion.div

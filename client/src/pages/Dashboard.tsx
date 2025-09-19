@@ -1,10 +1,14 @@
 import { Search } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import OrbitalInterface from "@/components/OrbitalInterface";
 import WellnessCompass from "@/components/WellnessCompass";
 
 export default function Dashboard() {
   return (
     <>
+      <div className="mb-4">
+        <BackButton />
+      </div>
       {/* Header */}
       <div className="flex justify-between items-center mb-6" data-testid="dashboard-header">
         <h1 className="text-white text-3xl font-bold">Daily Orbit</h1>
